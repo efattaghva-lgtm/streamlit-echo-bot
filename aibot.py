@@ -40,3 +40,46 @@ def ai_ask(prompt, data=None, temperature=0.5, max_tokens=250, model="mistral-sm
         "model": model,
         "max_tokens": int(max_tokens)
     }
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+
+    # Make the API request
+    response = requests.post(api_url, headers=headers, json=payload)
+    if response.status_code == 429:
+        return "You have hit the rate limit for the API. Please try again later."
+    try:
+        response.raise_for_status()
+        response_data = response.json()
+        content = response_data["choices"][0]["message"]["content"]
+        return content
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+st.title("Simple chat")
+
+# Initialize chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# Display chat messages from history on app rerun
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# Accept user input
+if prompt := st.chat_input("What is up?"):
+    # Display user message in chat message container
+    with st.chat_message("user"):
+        st.markdown(prompt)
+    # Add user message to chat history
+    st.session_state.messages.append({"role": "user", "content": prompt})
+
+# Display assistant response in chat message container
+with st.chat_message("assistant"):
+    response = st.write_stream(response_generator())
+
+# Add assistant response to chat history
+st.session_state.messages.append({"role": "assistant", "content": response})
