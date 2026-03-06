@@ -83,3 +83,4 @@ with st.chat_message("assistant"):
 
 # Add assistant response to chat history
 st.session_state.messages.append({"role": "assistant", "content": response})
+
